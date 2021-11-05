@@ -81,6 +81,7 @@ type Result struct {
 	Summary string          `json:"summary"`
 	Value   interface{}     `json:"value"`
 	Data    json.RawMessage `json:"result"`
+	Count     int       `json:"count"`
 }
 
 // Response returned from a FreeIPA JSON rpc call

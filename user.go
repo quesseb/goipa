@@ -131,6 +131,20 @@ func (c *Client) UpdateMobileNumber(uid string, number string) error {
 	return nil
 }
 
+// Update email address
+func (c *Client) ChangeMail(uid string, email string) error {
+        options := map[string]interface{}{
+            "mail": email }
+
+        _, err := c.rpc("user_mod", []string{uid}, options)
+
+        if err != nil {
+                return err
+        }
+
+        return nil
+}
+
 // Reset user password and return new random password
 func (c *Client) ResetPassword(uid string) (string, error) {
 
@@ -268,6 +282,19 @@ func (c *Client) UserEnable(uid string) error {
 	}
 
 	return nil
+}
+
+// search email
+func (c *Client) MailFind(email string) (int, error) {
+
+        var options = map[string]interface{}{
+                "mail": email }
+        res, err := c.rpc("user_find", []string{} , options)
+        if err != nil {
+               return 0, err
+        }
+        
+        return res.Result.Count, err
 }
 
 // Add new user. If random is true a random password will be created for the
