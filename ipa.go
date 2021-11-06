@@ -64,6 +64,14 @@ func (e *ErrInvalidPassword) Error() string {
 	return "ipa: invalid current password"
 }
 
+// FreeIPA Expired Password Error
+type ErrExpiredPassword struct {
+}
+
+func (e *ErrExpiredPassword) Error() string {
+	return "ipa: password expired"
+}
+
 // FreeIPA error
 type IpaError struct {
 	Message string
@@ -107,7 +115,10 @@ func init() {
 	// Load default IPA host
 	cfg, err := ini.Load("/etc/ipa/default.conf")
 	if err == nil {
-		ipaDefaultHost = cfg.Section("global").Key("server").MustString("localhost")
+		ipaServerURL, err := url.Parse(cfg.Section("global").Key("xmlrpc_uri").MustString("http://localhost"))
+		if err == nil {
+			ipaDefaultHost = ipaServerURL.Host
+		}
 		ipaDefaultRealm = cfg.Section("global").Key("realm").MustString("LOCAL")
 	}
 }
@@ -374,6 +385,10 @@ func (c *Client) RemoteLogin(uid, passwd string) error {
 		return err
 	}
 	defer res.Body.Close()
+
+	if res.StatusCode == 401 && res.Header.Get("X-IPA-Rejection-Reason") == "password-expired" {
+		return &ErrExpiredPassword{}
+	}
 
 	if res.StatusCode != 200 {
 		return fmt.Errorf("IPA login failed with HTTP status code: %d", res.StatusCode)
